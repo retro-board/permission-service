@@ -19,7 +19,7 @@ func BuildMongo(c *Config) error {
 		return err
 	}
 
-	creds, err := c.getVaultSecrets("kv/data/retro-board/permission-service-mongodb")
+	creds, err := c.getVaultSecrets("kv/data/retro-board/permission-service-mongo")
 	if err != nil {
 		return err
 	}

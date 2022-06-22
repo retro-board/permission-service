@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/caarlos0/env/v6"
-	"github.com/retro-board/key-service/internal/config"
+	"github.com/retro-board/permission-service/internal/config"
 )
 
 func TestServiceKey(t *testing.T) {

@@ -2,11 +2,12 @@ package service
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/keloran/go-healthcheck"
 	"github.com/keloran/go-probe"
-	"net/http"
-	"os"
 
 	bugLog "github.com/bugfixes/go-bugfixes/logs"
 	bugMiddleware "github.com/bugfixes/go-bugfixes/middleware"
@@ -35,7 +36,7 @@ func CheckAPIKey(next http.Handler) http.Handler {
 func (s *Service) Start() error {
 	bugLog.Local().Info("Starting Key")
 
-	logger := httplog.NewLogger("key-service", httplog.Options{
+	logger := httplog.NewLogger("permission-service", httplog.Options{
 		JSON: true,
 	})
 

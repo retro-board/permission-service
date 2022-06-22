@@ -21,22 +21,22 @@ func NewPermissions(cfg *config.Config) *Permissions {
 	}
 }
 
-func CreateUser(userId, companyId string) []Permission {
+func CreateUser(userID, companyID string) []Permission {
 	return []Permission{
 		{
-			Identifier: userId,
+			Identifier: userID,
 			Action:     "password",
 		},
 		{
-			Identifier: userId,
+			Identifier: userID,
 			Action:     "email",
 		},
 		{
-			Identifier: userId,
+			Identifier: userID,
 			Action:     "name",
 		},
 		{
-			Identifier: userId,
+			Identifier: userID,
 			Action:     "avatar",
 		},
 		{
@@ -76,18 +76,14 @@ func CreateUser(userId, companyId string) []Permission {
 			Action:     "remove",
 		},
 		{
-			Identifier: "board",
-			Action:     "view",
-		},
-		{
-			Identifier: companyId,
+			Identifier: userID,
 			Action:     "view",
 		},
 	}
 }
 
-func CreateLeader(userId, companyId string) []Permission {
-	userPerms := CreateUser(userId, companyId)
+func CreateLeader(userID, companyID string) []Permission {
+	userPerms := CreateUser(userID, companyID)
 	leaderPerms := []Permission{
 		{
 			Identifier: "board",
@@ -142,8 +138,8 @@ func CreateLeader(userId, companyId string) []Permission {
 	return append(userPerms, leaderPerms...)
 }
 
-func CreateOwner(userId, companyId string) []Permission {
-	leaderPerms := CreateLeader(userId, companyId)
+func CreateOwner(userID, companyID string) []Permission {
+	leaderPerms := CreateLeader(userID, companyID)
 	ownerPerms := []Permission{
 		{
 			Identifier: "board",
@@ -158,11 +154,11 @@ func CreateOwner(userId, companyId string) []Permission {
 			Action:     "create",
 		},
 		{
-			Identifier: companyId,
+			Identifier: companyID,
 			Action:     "delete",
 		},
 		{
-			Identifier: companyId,
+			Identifier: companyID,
 			Action:     "edit",
 		},
 		{
