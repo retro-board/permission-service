@@ -9,8 +9,9 @@ require (
 	github.com/go-chi/cors v1.2.1
 	github.com/go-chi/httplog v0.2.4
 	github.com/hashicorp/vault/api v1.7.2
-	github.com/keloran/go-healthcheck v1.0.1
-	github.com/keloran/go-probe v0.0.0-20210417224119-539dae99a65e
+	github.com/keloran/go-healthcheck v1.2.0
+	github.com/keloran/go-probe v1.0.0
+	github.com/retro-board/key-service v0.1.2
 )
 
 require (
