@@ -2,20 +2,22 @@ package service
 
 import (
 	"fmt"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+	"net"
 	"net/http"
 	"os"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/keloran/go-healthcheck"
-	"github.com/keloran/go-probe"
-
 	bugLog "github.com/bugfixes/go-bugfixes/logs"
 	bugMiddleware "github.com/bugfixes/go-bugfixes/middleware"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/httplog"
+	"github.com/keloran/go-healthcheck"
+	"github.com/keloran/go-probe"
 	"github.com/retro-board/permission-service/internal/config"
 	"github.com/retro-board/permission-service/internal/permissions"
+	pb "github.com/retro-board/protos/generated/permissions/v1"
 )
 
 type Service struct {
@@ -36,55 +38,58 @@ func CheckAPIKey(next http.Handler) http.Handler {
 func (s *Service) Start() error {
 	bugLog.Local().Info("Starting Key")
 
-	logger := httplog.NewLogger("permission-service", httplog.Options{
-		JSON: true,
-	})
+	errChan := make(chan error)
+	go func() {
+		port := fmt.Sprintf(":%d", s.Config.GRPCPort)
+		bugLog.Local().Infof("Starting Permissions GRPC: %s", port)
+		lis, err := net.Listen("tcp", port)
+		if err != nil {
+			errChan <- bugLog.Errorf("failed to listen: %v", err)
+		}
+		gs := grpc.NewServer()
+		reflection.Register(gs)
+		pb.RegisterPermissionsServiceServer(gs, &permissions.Server{
+			Config: s.Config,
+		})
+		if err := gs.Serve(lis); err != nil {
+			errChan <- bugLog.Errorf("failed to start grpc: %v", err)
+		}
+	}()
 
-	allowedOrigins := []string{
-		"http://localhost:8080",
-		"https://retro-board.it",
-		"https://*.retro-board.it",
-	}
-	if s.Config.Development {
-		allowedOrigins = append(allowedOrigins, "http://*")
-	}
+	go func() {
+		port := fmt.Sprintf(":%d", s.Config.HTTPPort)
+		bugLog.Local().Infof("Starting Permissions HTTP: %s", port)
 
-	c := cors.New(cors.Options{
-		AllowedOrigins:   allowedOrigins,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-User-Token"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
-	})
+		allowedOrigins := []string{
+			"http://localhost:8080",
+			"https://retro-board.it",
+			"https://*.retro-board.it",
+		}
+		if s.Config.Development {
+			allowedOrigins = append(allowedOrigins, "http://*")
+		}
 
-	r := chi.NewRouter()
+		c := cors.New(cors.Options{
+			AllowedOrigins:   allowedOrigins,
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-User-Token"},
+			ExposedHeaders:   []string{"Link"},
+			AllowCredentials: true,
+			MaxAge:           300, // Maximum value not ignored by any of major browsers
+		})
 
-	r.Use(middleware.Heartbeat("/ping"))
-
-	r.Route("/", func(r chi.Router) {
+		r := chi.NewRouter()
+		r.Use(middleware.Heartbeat("/ping"))
 		r.Use(middleware.RequestID)
 		r.Use(c.Handler)
 		r.Use(bugMiddleware.BugFixes)
-		r.Use(httplog.RequestLogger(logger))
+		r.Get("/health", healthcheck.HTTP)
+		r.Get("/probe", probe.HTTP)
 
-		if !s.Config.Development {
-			r.Use(CheckAPIKey)
+		if err := http.ListenAndServe(port, r); err != nil {
+			errChan <- bugLog.Errorf("port failed: %+v", err)
 		}
+	}()
 
-		r.Post("/", permissions.NewPermissions(s.Config).CreateHandler)
-		r.Get("/", permissions.NewPermissions(s.Config).GetHandler)
-		r.Put("/", permissions.NewPermissions(s.Config).UpdateHandler)
-		r.Get("/{permission}", permissions.NewPermissions(s.Config).ValidateHandler)
-	})
-
-	r.Get("/health", healthcheck.HTTP)
-	r.Get("/probe", probe.HTTP)
-
-	bugLog.Local().Infof("listening on %d\n", s.Config.Local.Port)
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", s.Config.Local.Port), r); err != nil {
-		return bugLog.Errorf("port failed: %+v", err)
-	}
-
-	return nil
+	return <-errChan
 }

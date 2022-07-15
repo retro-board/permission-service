@@ -28,6 +28,10 @@ type BillingService struct {
 	Key     string `env:"BILLING_SERVICE_KEY"`
 	Address string `env:"BILLING_SERVICE_ADDRESS" envDefault:"https://api.retro-board.it/v1/billing"`
 }
+type KeyService struct {
+	Key     string `env:"KEY_SERVICE_KEY"`
+	Address string `env:"KEY_SERVICE_ADDRESS" envDefault:"https://api.retro-board.it/v1/key"`
+}
 
 type Services struct {
 	UserService
@@ -35,12 +39,14 @@ type Services struct {
 	TimerService
 	RetroService
 	BillingService
+	KeyService
 }
 
 type Local struct {
 	KeepLocal   bool `env:"LOCAL_ONLY" envDefault:"false"`
 	Development bool `env:"DEVELOPMENT" envDefault:"false"`
-	Port        int  `env:"PORT" envDefault:"3000"`
+	HTTPPort    int  `env:"HTTP_PORT" envDefault:"3000"`
+	GRPCPort    int  `env:"GRPC_PORT" envDefault:"8001"`
 
 	OnePasswordKey  string `env:"ONE_PASSWORD_KEY"`
 	OnePasswordPath string `env:"ONE_PASSWORD_PATH"`
@@ -84,6 +90,11 @@ func BuildServiceKey(cfg *Config) error {
 }
 
 func BuildServiceKeys(cfg *Config) error {
+	// skip vault if development
+	if cfg.Local.Development {
+		return nil
+	}
+
 	vaultSecrets, err := cfg.getVaultSecrets("kv/data/retro-board/api-keys")
 	if err != nil {
 		return err
@@ -106,10 +117,12 @@ func BuildServiceKeys(cfg *Config) error {
 			cfg.Local.Services.UserService.Key = secret.Value
 		case "company":
 			cfg.Local.Services.CompanyService.Key = secret.Value
-		case "key":
+		case "timer":
 			cfg.Local.Services.TimerService.Key = secret.Value
 		case "billing":
 			cfg.Local.Services.BillingService.Key = secret.Value
+		case "key":
+			cfg.Local.Services.KeyService.Key = secret.Value
 		}
 	}
 

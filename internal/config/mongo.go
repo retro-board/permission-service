@@ -19,6 +19,11 @@ func BuildMongo(c *Config) error {
 		return err
 	}
 
+	// skip going to vault
+	if c.Local.Development {
+		return nil
+	}
+
 	creds, err := c.getVaultSecrets("kv/data/retro-board/permission-service-mongo")
 	if err != nil {
 		return err
