@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/vault/api v1.7.2
 	github.com/keloran/go-healthcheck v1.2.0
 	github.com/keloran/go-probe v1.0.0
-	github.com/retro-board/protos v0.0.9
+	github.com/retro-board/protos v0.0.10
 	go.mongodb.org/mongo-driver v1.9.1
 	google.golang.org/grpc v1.47.0
 )

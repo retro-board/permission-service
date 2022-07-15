@@ -278,6 +278,8 @@ github.com/retro-board/protos v0.0.8 h1:3dXCjczYHSAUbmURwXygAEx0/ZR65Je/B2zsrQ02
 github.com/retro-board/protos v0.0.8/go.mod h1:pwmItucayx26ZkoQG04mEb42a4EpE8OnN88c5wV9a80=
 github.com/retro-board/protos v0.0.9 h1:Ka5+JEcyT57YXfwqXyZyPTyn2xYdKbKeCnCrYEe6cJc=
 github.com/retro-board/protos v0.0.9/go.mod h1:pwmItucayx26ZkoQG04mEb42a4EpE8OnN88c5wV9a80=
+github.com/retro-board/protos v0.0.10 h1:ERp1ccDJ+07KPmZbL2m7pM4iq/duDJRwb+RxUIwJiEo=
+github.com/retro-board/protos v0.0.10/go.mod h1:pwmItucayx26ZkoQG04mEb42a4EpE8OnN88c5wV9a80=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
 github.com/rs/xid v1.2.1/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=
 github.com/rs/xid v1.3.0/go.mod h1:trrq9SKmegXys3aeAKXMUTdJsYXVwGY3RLcfgqegfbg=

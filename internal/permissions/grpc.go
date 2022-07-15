@@ -106,7 +106,34 @@ func (s *Server) CanDo(ctx context.Context, req *pb.AllowedRequest) (*pb.Allowed
 		}
 	}
 
-	return nil, nil
+	dataset, err := NewMongo(s.Config).Get(req.UserID)
+	if err != nil {
+		bugLog.Info(err)
+
+		return &pb.AllowedResponse{
+			Status: "internal storage error",
+		}, nil
+	}
+
+	for _, perm := range dataset.Permissions {
+		if perm.Identifier == req.Resource && perm.Action == req.Action {
+			if perm.Filter == "" {
+				return &pb.AllowedResponse{
+					Allowed: true,
+				}, nil
+			} else {
+				if perm.Filter == req.Filter {
+					return &pb.AllowedResponse{
+						Allowed: true,
+					}, nil
+				}
+			}
+		}
+	}
+
+	return &pb.AllowedResponse{
+		Allowed: false,
+	}, nil
 }
 
 func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.PermissionResponse, error) {
@@ -115,6 +142,18 @@ func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb
 		return &pb.PermissionResponse{
 			Status: "missing user-id",
 		}, nil
+	}
+
+	if req.APIKey == "" {
+		return nil, bugLog.Errorf("missing service-key")
+	} else {
+		valid, err := NewPermissions(s.Config, req.UserID).ValidateServiceKey(req.APIKey)
+		if err != nil {
+			return nil, err
+		}
+		if !valid {
+			return nil, bugLog.Errorf("invalid service key")
+		}
 	}
 
 	p := NewPermissions(s.Config, req.UserID)
