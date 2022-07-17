@@ -2,7 +2,6 @@ package permissions
 
 import (
 	"context"
-	"fmt"
 	bugLog "github.com/bugfixes/go-bugfixes/logs"
 	"github.com/retro-board/permission-service/internal/config"
 	pb "github.com/retro-board/protos/generated/permissions/v1"
@@ -59,8 +58,6 @@ func (s *Server) MultiPermissions(ctx context.Context, reqs *pb.MultiRequest) (*
 			Resource: req.Resource,
 			Filter:   req.Filter,
 		})
-
-		fmt.Printf("action: %s, resource: %s, filter: %s\n", req.Action, req.Resource, req.Filter)
 	}
 
 	return &pb.PermissionResponse{
@@ -109,9 +106,10 @@ func (s *Server) CanDo(ctx context.Context, req *pb.AllowedRequest) (*pb.Allowed
 	dataset, err := NewMongo(s.Config).Get(req.UserID)
 	if err != nil {
 		bugLog.Info(err)
+		s := "internal storage error"
 
 		return &pb.AllowedResponse{
-			Status: "internal storage error",
+			Status: &s,
 		}, nil
 	}
 
@@ -139,8 +137,9 @@ func (s *Server) CanDo(ctx context.Context, req *pb.AllowedRequest) (*pb.Allowed
 func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.PermissionResponse, error) {
 	if req.UserID == "" {
 		bugLog.Info("missing user-id")
+		s := "missing user-id"
 		return &pb.PermissionResponse{
-			Status: "missing user-id",
+			Status: &s,
 		}, nil
 	}
 
@@ -163,8 +162,11 @@ func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb
 	if req.CompanyID == nil {
 		perms, err := p.CreateOwner()
 		if err != nil {
+			bugLog.Info(err)
+
+			s := "internal storage error"
 			return &pb.PermissionResponse{
-				Status: "internal storage error",
+				Status: &s,
 			}, nil
 		}
 
@@ -179,9 +181,11 @@ func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb
 		var permItems []*pb.PermissionItem
 		return &pb.PermissionResponse{
 			Permissions: permItems,
-			Status:      "created owner",
 		}, nil
 	}
 
-	return nil, nil
+	stat := "unknown error"
+	return &pb.PermissionResponse{
+		Status: &stat,
+	}, nil
 }
