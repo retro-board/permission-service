@@ -14,6 +14,7 @@ require (
 	github.com/retro-board/protos v0.0.11
 	go.mongodb.org/mongo-driver v1.9.1
 	google.golang.org/grpc v1.47.0
+	github.com/retro-board/key-service v0.1.2
 )
 
 require (
