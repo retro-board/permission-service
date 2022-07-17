@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"context"
+
 	bugLog "github.com/bugfixes/go-bugfixes/logs"
 	"github.com/retro-board/permission-service/internal/config"
 	pb "github.com/retro-board/protos/generated/permissions/v1"
@@ -86,6 +87,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	return nil, nil
 }
 
+//nolint:gocyclo
 func (s *Server) CanDo(ctx context.Context, req *pb.AllowedRequest) (*pb.AllowedResponse, error) {
 	if req.UserID == "" {
 		return nil, bugLog.Errorf("missing user-id")
@@ -119,12 +121,10 @@ func (s *Server) CanDo(ctx context.Context, req *pb.AllowedRequest) (*pb.Allowed
 				return &pb.AllowedResponse{
 					Allowed: true,
 				}, nil
-			} else {
-				if perm.Filter == req.Filter {
-					return &pb.AllowedResponse{
-						Allowed: true,
-					}, nil
-				}
+			} else if perm.Filter == req.Filter {
+				return &pb.AllowedResponse{
+					Allowed: true,
+				}, nil
 			}
 		}
 	}
@@ -178,7 +178,6 @@ func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb
 			}
 			permItems = append(permItems, permItem)
 		}
-		var permItems []*pb.PermissionItem
 		return &pb.PermissionResponse{
 			Permissions: permItems,
 		}, nil

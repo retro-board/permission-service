@@ -2,11 +2,12 @@ package service
 
 import (
 	"fmt"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 	"net"
 	"net/http"
 	"os"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	bugLog "github.com/bugfixes/go-bugfixes/logs"
 	bugMiddleware "github.com/bugfixes/go-bugfixes/middleware"

@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"context"
+
 	bugLog "github.com/bugfixes/go-bugfixes/logs"
 	"github.com/retro-board/permission-service/internal/config"
 	keyBuf "github.com/retro-board/protos/generated/key/v1"

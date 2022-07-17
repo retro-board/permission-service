@@ -89,6 +89,7 @@ func BuildServiceKey(cfg *Config) error {
 	return nil
 }
 
+//nolint:gocyclo
 func BuildServiceKeys(cfg *Config) error {
 	// skip vault if development
 	if cfg.Local.Development {
