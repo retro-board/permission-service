@@ -12,7 +12,7 @@ require (
 	github.com/keloran/go-probe v1.0.0
 	github.com/retro-board/protos v0.0.11
 	go.mongodb.org/mongo-driver v1.10.0
-	google.golang.org/grpc v1.47.0
+	google.golang.org/grpc v1.48.0
 )
 
 require (
