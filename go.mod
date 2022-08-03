@@ -11,7 +11,7 @@ require (
 	github.com/keloran/go-healthcheck v1.2.0
 	github.com/keloran/go-probe v1.0.0
 	github.com/retro-board/protos v0.0.11
-	go.mongodb.org/mongo-driver v1.10.0
+	go.mongodb.org/mongo-driver v1.10.1
 	google.golang.org/grpc v1.48.0
 )
 
