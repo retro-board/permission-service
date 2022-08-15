@@ -18,9 +18,9 @@ type Permissions struct {
 }
 
 type Permission struct {
-	Identifier string
-	Action     string
-	Filter     string
+	Resource string
+	Action   string
+	Filter   string
 }
 
 func NewPermissions(cfg *config.Config, userID string) *Permissions {
@@ -30,96 +30,58 @@ func NewPermissions(cfg *config.Config, userID string) *Permissions {
 	}
 }
 
-func (p Permissions) CreateUser(companyID string) ([]Permission, error) {
-	userPerms := p.AddPerms(p.UserID, "user", "password", "email", "name", "avatar", "view")
-	userPerms = append(userPerms, p.AddPerm(companyID, "topic", "create")...)
-	userPerms = append(userPerms, p.AddPerm(companyID, "leader", "list")...)
-	userPerms = append(userPerms, p.AddPerm(companyID, "board", "list")...)
-
-	if companyID != "" {
-		userPerms = append(userPerms, p.AddPerm(companyID, "company", "view")...)
-	}
-
-	return userPerms, nil
-}
-
-func (p Permissions) CreateLeader(companyID string) ([]Permission, error) {
-	userPerms, err := p.CreateUser(companyID)
+func (p Permissions) AddPermission(perms ...Permission) error {
+	currentPerms, err := NewMongo(p.cfg).Get(p.UserID)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	currentPerms.Permissions = append(currentPerms.Permissions, perms...)
 
-	leaderPerms := p.AddPerms("", "timer", "start", "stop", "extend")
-	leaderPerms = append(leaderPerms, p.AddPerms(companyID, "retro", "start", "stop")...)
-	leaderPerms = append(leaderPerms, p.AddPerms(companyID, "leader", "add", "remove")...)
-
-	return append(userPerms, leaderPerms...), nil
+	return NewMongo(p.cfg).Update(*currentPerms)
 }
 
-func (p Permissions) CreateOwner() ([]Permission, error) {
-	userPerms := p.AddPerms(p.UserID, "user", "password", "email", "name", "avatar", "view")
-
-	ownerPerms := p.AddPerm("", "company", "create")
-
-	if err := NewMongo(p.cfg).Create(DataSet{
+func (p Permissions) UpdatePermissions(perms ...Permission) error {
+	newPerms := []Permission{}
+	newPerms = append(newPerms, perms...)
+	return NewMongo(p.cfg).Update(DataSet{
 		UserID:      p.UserID,
-		Permissions: ownerPerms,
-	}); err != nil {
-		return nil, err
-	}
-
-	return append(userPerms, ownerPerms...), nil
+		Permissions: newPerms,
+	})
 }
 
-func (p Permissions) UpdateOwnerWithCorrectPerms(companyID string) ([]Permission, error) {
-	leaderPerms, err := p.CreateLeader(companyID)
+func (p Permissions) RemovePermission(perm Permission) error {
+	currentPerms, err := NewMongo(p.cfg).Get(p.UserID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	ownerPerms := p.updatePerms(companyID, "board", "create")
-	ownerPerms = append(ownerPerms, p.updatePerms(companyID, "topic", "create")...)
-	ownerPerms = append(ownerPerms, p.updatePerms(companyID, "leader", "add", "remove")...)
-	ownerPerms = append(ownerPerms, p.updatePerms(companyID, "company", "edit", "delete")...)
-	ownerPerms = append(ownerPerms, p.updatePerms(companyID, "billing", "create", "list", "edit", "delete")...)
-
-	return append(leaderPerms, ownerPerms...), nil
-}
-
-func (p Permissions) AddPerm(filter, identifier, action string) []Permission {
-	return []Permission{
-		{
-			Identifier: identifier,
-			Action:     action,
-			Filter:     filter,
-		},
-	}
-}
-
-func (p Permissions) AddPerms(filter, identifier string, action ...string) []Permission {
-	perms := make([]Permission, len(action))
-	for i, a := range action {
-		perms[i] = Permission{
-			Identifier: identifier,
-			Action:     a,
-			Filter:     filter,
+	for i, cperm := range currentPerms.Permissions {
+		if cperm.Resource == perm.Resource && cperm.Action == perm.Action && cperm.Filter == perm.Filter {
+			currentPerms.Permissions = append(currentPerms.Permissions[:i], currentPerms.Permissions[i+1:]...)
+			break
 		}
 	}
 
-	return perms
+	return NewMongo(p.cfg).Update(*currentPerms)
 }
 
-func (p Permissions) updatePerms(filter, identifier string, action ...string) []Permission {
-	perms := make([]Permission, len(action))
-	for i, a := range action {
-		perms[i] = Permission{
-			Identifier: identifier,
-			Action:     a,
-			Filter:     filter,
+func (p Permissions) CheckPerm(perm Permission) (bool, error) {
+	perms, err := NewMongo(p.cfg).Get(p.UserID)
+	if err != nil {
+		return false, err
+	}
+
+	for _, cperm := range perms.Permissions {
+		if cperm.Filter == "*" || cperm.Filter == perm.Filter {
+			if cperm.Resource == "*" || cperm.Resource == perm.Resource {
+				if cperm.Action == "*" || cperm.Action == perm.Action {
+					return true, nil
+				}
+			}
 		}
 	}
 
-	return perms
+	return false, nil
 }
 
 func (p *Permissions) ValidateServiceKey(serviceKey string) (bool, error) {
@@ -149,27 +111,6 @@ func (p *Permissions) ValidateServiceKey(serviceKey string) (bool, error) {
 	}
 	if resp.Valid {
 		return true, nil
-	}
-
-	return false, nil
-}
-
-func (p Permissions) CheckPerm(userID, filter, identifier, action string) (bool, error) {
-	perms, err := NewMongo(p.cfg).Get(userID)
-	if err != nil {
-		return false, err
-	}
-
-	for _, perm := range perms.Permissions {
-		if filter == "" {
-			if perm.Identifier == identifier && perm.Action == action {
-				return true, nil
-			}
-		} else {
-			if perm.Identifier == identifier && perm.Action == action && perm.Filter == filter {
-				return true, nil
-			}
-		}
 	}
 
 	return false, nil

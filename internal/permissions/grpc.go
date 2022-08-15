@@ -52,6 +52,7 @@ func (s *Server) MultiPermissions(ctx context.Context, reqs *pb.MultiRequest) (*
 	}
 
 	var perms []*pb.PermissionItem
+	var storePerm []Permission
 
 	for _, req := range reqs.Requests {
 		perms = append(perms, &pb.PermissionItem{
@@ -59,6 +60,16 @@ func (s *Server) MultiPermissions(ctx context.Context, reqs *pb.MultiRequest) (*
 			Resource: req.Resource,
 			Filter:   req.Filter,
 		})
+		storePerm = append(storePerm, Permission{
+			Action:   req.Action,
+			Resource: req.Resource,
+			Filter:   req.Filter,
+		})
+	}
+
+	err := NewPermissions(s.Config, reqs.Requests[0].UserID).UpdatePermissions(storePerm...)
+	if err != nil {
+		return nil, err
 	}
 
 	return &pb.PermissionResponse{
@@ -105,86 +116,16 @@ func (s *Server) CanDo(ctx context.Context, req *pb.AllowedRequest) (*pb.Allowed
 		}
 	}
 
-	dataset, err := NewMongo(s.Config).Get(req.UserID)
+	allowed, err := NewPermissions(s.Config, req.UserID).CheckPerm(Permission{
+		Action:   req.Action,
+		Resource: req.Resource,
+		Filter:   req.Filter,
+	})
 	if err != nil {
-		bugLog.Info(err)
-		s := "internal storage error"
-
-		return &pb.AllowedResponse{
-			Status: &s,
-		}, nil
-	}
-
-	for _, perm := range dataset.Permissions {
-		if perm.Identifier == req.Resource && perm.Action == req.Action {
-			if perm.Filter == "" {
-				return &pb.AllowedResponse{
-					Allowed: true,
-				}, nil
-			} else if perm.Filter == req.Filter {
-				return &pb.AllowedResponse{
-					Allowed: true,
-				}, nil
-			}
-		}
+		return nil, err
 	}
 
 	return &pb.AllowedResponse{
-		Allowed: false,
-	}, nil
-}
-
-func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.PermissionResponse, error) {
-	if req.UserID == "" {
-		bugLog.Info("missing user-id")
-		s := "missing user-id"
-		return &pb.PermissionResponse{
-			Status: &s,
-		}, nil
-	}
-
-	if req.APIKey == "" {
-		return nil, bugLog.Errorf("missing service-key")
-	} else {
-		valid, err := NewPermissions(s.Config, req.UserID).ValidateServiceKey(req.APIKey)
-		if err != nil {
-			return nil, err
-		}
-		if !valid {
-			return nil, bugLog.Errorf("invalid service key")
-		}
-	}
-
-	p := NewPermissions(s.Config, req.UserID)
-	var permItems []*pb.PermissionItem
-
-	// assume company owner
-	if req.CompanyID == nil {
-		perms, err := p.CreateOwner()
-		if err != nil {
-			bugLog.Info(err)
-
-			s := "internal storage error"
-			return &pb.PermissionResponse{
-				Status: &s,
-			}, nil
-		}
-
-		for _, perm := range perms {
-			permItem := &pb.PermissionItem{
-				Action:   perm.Action,
-				Resource: perm.Identifier,
-				Filter:   perm.Filter,
-			}
-			permItems = append(permItems, permItem)
-		}
-		return &pb.PermissionResponse{
-			Permissions: permItems,
-		}, nil
-	}
-
-	stat := "unknown error"
-	return &pb.PermissionResponse{
-		Status: &stat,
+		Allowed: allowed,
 	}, nil
 }
