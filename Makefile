@@ -19,7 +19,11 @@ publish-images:
 	nerdctl push containers.chewedfeed.com/retro-board/${SERVICE_NAME}:latest --all-platforms
 
 .PHONY: build
-build: build-images
+build: build-app build-images
+
+.PHONY: build-app
+build-app: ## Build the app
+	go build -ldflags "-w -s -X main.BuildVersion=0.1 -X main.BuildHash=${GIT_COMMIT} -X main.ServiceName=${SERVICE_NAME}" -o ./bin/service -v ./cmd/service.go
 
 .PHONY: deploy
 deploy:
