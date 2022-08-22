@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/bugfixes/go-bugfixes v0.7.1
-	github.com/caarlos0/env/v6 v6.9.3
+	github.com/caarlos0/env/v6 v6.10.0
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/cors v1.2.1
 	github.com/hashicorp/vault/api v1.7.2
@@ -55,7 +55,6 @@ require (
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
