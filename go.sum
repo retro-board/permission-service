@@ -98,8 +98,8 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=
-github.com/retro-board/protos v0.0.13 h1:7AUFFCnQoLvqLucxiExnQbe+fQIm74LV9sgPa16XCRw=
-github.com/retro-board/protos v0.0.13/go.mod h1:pwmItucayx26ZkoQG04mEb42a4EpE8OnN88c5wV9a80=
+github.com/retro-board/protos v0.0.14 h1:fM66clKP7TnEwQcwekYV4R0rO3kHzBgWCbddrO6oSlQ=
+github.com/retro-board/protos v0.0.14/go.mod h1:pwmItucayx26ZkoQG04mEb42a4EpE8OnN88c5wV9a80=
 github.com/ryanuber/columnize v2.1.0+incompatible/go.mod h1:sm1tb6uqfes/u+d4ooFouqFdy9/2g9QGwK3SQygK0Ts=
 github.com/ryanuber/go-glob v1.0.0 h1:iQh3xXAumdQ+4Ufa5b25cRpC5TYKlno6hsv6Cb3pkBk=
 github.com/ryanuber/go-glob v1.0.0/go.mod h1:807d1WSdnB0XRJzKNil9Om6lcp/3a0v4qIHxIXzX/Yc=
